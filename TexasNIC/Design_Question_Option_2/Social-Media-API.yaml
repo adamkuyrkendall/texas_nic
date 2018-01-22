@@ -1,0 +1,377 @@
+openapi: 3.0.0
+info:
+  title: Sample Activity API
+  description: Sample Social Media API specification
+  contact:
+    name: API Support
+    url: http://social.sample.com/support
+    email: adam.kuyrkendall@gmail.com
+  version: 0.0.1
+
+servers:
+- url: https://{environment}.api.sample.com:{port}/{basePath}
+  description: The API server
+  variables:
+    environment:
+      default: development
+      enum:
+        - development
+        - staging
+        - demo
+        - production
+      description: The deployment environment of the API
+    port:
+      enum:
+        - '8443'
+        - '443'
+      default: '8443'
+    basePath:
+      default: v1
+
+paths:
+  /{user-id}/activities:
+    get:
+      summary: Returns an array of all Activity Resources
+      parameters:
+        - name: user-id
+          in: path
+          required: true
+          description: ID of User
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: An array of Activity Resources
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Activity'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '5XX':
+          description: Unexpected Internal Server Error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    
+    post:
+      summary: Creates a new Activity resource
+      parameters:
+        - name: user-id
+          in: path
+          required: true
+          description: ID of User
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        $ref: '#/components/requestBodies/NewActivityRequestBody'
+      responses:
+        '201':
+          description: Activity resource created
+        '405':
+          description: Invalid input
+          
+    delete:
+      summary: Deletes all Activity resources for User
+      parameters:
+        - name: user-id
+          in: path
+          required: true
+          description: ID of User
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Activity Deleted
+        default:
+          description: Unexpected Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          
+          
+  /{user-id}/activities/{activity-id}:
+    get:
+      summary: Returns single Activity resource by ID
+      parameters:
+        - name: user-id
+          in: path
+          required: true
+          description: ID of User
+          schema:
+            type: string
+            format: uuid
+        - name: activity-id
+          in: path
+          required: true
+          description: ID of Activity
+          schema:
+            type : integer
+            format: int64
+            minimum: 1
+      responses: 
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Activity'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Resource Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '5XX':
+          description: Unexpected Internal Server Error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    put:
+      summary: Update an existing Activity resource
+      parameters:
+        - name: user-id
+          in: path
+          required: true
+          description: ID of User
+          schema:
+            type: string
+            format: uuid
+        - name: activity-id
+          in: path
+          required: true
+          description: ID of Activity.
+          schema:
+            type : integer
+            format: int64
+            minimum: 1
+      requestBody:
+        $ref: '#/components/requestBodies/ExistingActivityRequestBody'
+      responses:
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    delete:
+      summary: Deletes a single Activity resource
+      parameters:
+        - name: user-id
+          in: path
+          required: true
+          description: ID of User
+          schema:
+            type: string
+            format: uuid
+        - name: activity-id
+          in: path
+          required: true
+          description: ID of Activity.
+          schema:
+            type : integer
+            format: int64
+            minimum: 1
+      responses:
+        '204':
+          description: Activity Deleted
+        default:
+          description: Unexpected Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /{user-id}/activities/previous:
+    get:
+      summary: Returns previous Activities.
+      parameters:
+        - name: user-id
+          in: path
+          required: true
+          description: ID of User
+          schema:
+            type: string
+            format: uuid
+        - in: query
+          name: activity-id
+          required: true
+          description: ID of Activity
+          schema:
+            type : integer
+            format: int64
+            minimum: 1
+        - in: query 
+          name: offset 
+          required: false
+          description: The number of items to skip before starting to collect the Activity array.
+          schema:
+            type: integer
+            default: 0
+            minimum: 0
+        - in: query
+          name: limit
+          required: false
+          description: The number of Activities to return.
+          schema:
+            type : integer
+            format: int64
+            minimum: 1
+            maximum: 100
+            default: 20
+      responses: 
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Activity'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '5XX':
+          description: Unexpected Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /{user-id}/activities/next:
+    get:
+      summary: Returns next Activities.
+      parameters:
+        - name: user-id
+          in: path
+          required: true
+          description: ID of User
+          schema:
+            type: string
+            format: uuid
+        - in: query
+          name: activity-id
+          required: true
+          description: ID of Activity
+          schema:
+            type : integer
+            format: int64
+            minimum: 1
+        - in: query 
+          name: offset 
+          required: false
+          description: The number of items to skip before starting to collect the Activity array.
+          schema:
+            type: integer
+            default: 0
+            minimum: 0
+        - in: query
+          name: limit
+          required: false
+          description: The number of Activities to return.
+          schema:
+            type : integer
+            format: int64
+            minimum: 1
+            maximum: 100
+            default: 20
+      responses: 
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Activity'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '5XX':
+          description: Unexpected internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+components:
+  securitySchemes:
+    ApiKeyAuth:        
+      type: apiKey
+      in: header       
+      name: X-API-KEY  
+
+  schemas:
+    Activity:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: The Activity ID
+        created-at:
+          type: string
+          format: date-time
+          description: The Activity created date time
+        updated-at:
+          type: string
+          format: date-time
+          description: The Activity last updated date time
+        body:
+          type: string
+          description: The Activity text
+    
+    Error:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int32
+        message:
+          type: string
+  
+  requestBodies:
+    ExistingActivityRequestBody:
+      description: A JSON object containing and Activity resource
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Activity'
+            
+    NewActivityRequestBody:
+      description: A JSON object containing new Activity resource
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - body
+            properties:
+              body:
+                type: string
+
+# require API Key globally                
+security:
+  - ApiKeyAuth: [] 
